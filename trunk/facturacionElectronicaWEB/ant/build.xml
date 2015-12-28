@@ -1,0 +1,91 @@
+<project name="facturacionElectronicaWEB" default="build" basedir=".">
+
+	<property file="build.properties" />
+	<property name="app.dir" location=".." />
+
+	<property name="webroot.dir" value="${app.dir}/WebContent" />
+	<property name="webinf.dir" value="${webroot.dir}/WEB-INF" />
+	<property name="build.dir" value="${app.dir}/build" />
+	<property name="lib.dir" value="${webroot.dir}/WEB-INF/lib" />
+	<property name="deploy.dir" location="${app.dir}/deploy" />
+	<property name="ejb.module.dir" location="../../${ejb.module.name}/deploy" />
+	<property name="s3s.module.dir" location="../../${s3s.module.name}/deploy" />
+	<property name="ejb.commons.module.dir" location="../../${ejb.commons.module.name}/deploy" />
+	<property name="commonEjb.module.dir" location="../../${commonEjb.module.name}/deploy" />
+
+	<!-- classpath  -->
+	<path id="compile.classpath">
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<!-- Check timestamp on files -->
+	<target name="prepare">
+		<tstamp />
+	</target>
+
+	<target name="resources">
+		<copy todir="${webinf.dir}/classes" includeEmptyDirs="no">
+			<fileset dir="${app.dir}/src">
+				<patternset>
+					<include name="**/*.conf" />
+					<include name="**/*.properties" />
+					<include name="**/*.xml" />
+				</patternset>
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- Normal build of application -->
+	<target name="compile" depends="prepare">
+		<javac srcdir="${app.dir}/src" destdir="${webinf.dir}/classes">
+			<classpath refid="compile.classpath" />
+		</javac>
+	</target>
+
+	<!-- Remove classes directory for clean build -->
+	<target name="clean" description="Prepare for clean build">
+		<delete file="${deploy.dir}/*.war" />
+	</target>
+
+	<!-- Build entire project -->
+	<target name="build" depends="compile,resources" />
+
+	<!-- Create binary distribution -->
+	<target name="war" depends="clean,build">
+		<war basedir="${webroot.dir}" warfile="${deploy.dir}/${project.name}.war" webxml="${webinf.dir}/web.xml">
+			<exclude name="WEB-INF/web.xml" />
+			<exclude name="WEB-INF/lib/ejb3-persistence.jar" />
+			<exclude name="WEB-INF/lib/hibernate*.jar" />
+			<exclude name="WEB-INF/lib/jboss*.jar" />
+			<exclude name="WEB-INF/lib/javax.servlet.jar" />
+			<exclude name="WEB-INF/lib/javassist.jar" />
+			<exclude name="WEB-INF/lib/commons-*.jar" />
+			<exclude name="WEB-INF/lib/jsf-*.jar" />
+			<exclude name="WEB-INF/lib/portlet-*.jar" />
+			<exclude name="WEB-INF/lib/struts.jar" />
+			<exclude name="WEB-INF/lib/log4j*.jar" />
+			<exclude name="WEB-INF/lib/jakarta-oro.jar" />
+			<exclude name="WEB-INF/lib/spring.jar" />
+			<exclude name="WEB-INF/lib/quartz-all-1.5.2.jar" />
+			<exclude name="WEB-INF/lib/jstl.jar" />
+			<exclude name="reportes/*.jrxml" />
+		</war>
+	</target>
+
+	<!-- ========================================= -->
+	<!-- deploy - deploy artifact to server        -->
+	<!-- ========================================= -->
+	<target name="deploy" depends="war">
+		<copy file="${deploy.dir}/${project.name}.war" todir="${jboss.deploy.dir}" />
+	</target>
+
+	<!-- ========================================= -->
+	<!-- undeploy - undeploy artifact from server        -->
+	<!-- ========================================= -->
+	<target name="undeploy">
+		<delete file="${jboss.deploy.dir}/${project.name}.war" />
+	</target>
+
+</project>
